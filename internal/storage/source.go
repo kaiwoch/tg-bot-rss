@@ -13,6 +13,10 @@ type SourcePostgresStorage struct {
 	db *sqlx.DB
 }
 
+func NewSourceStorage(db *sqlx.DB) *SourcePostgresStorage {
+	return &SourcePostgresStorage{db: db}
+}
+
 func (s *SourcePostgresStorage) Sources(ctx context.Context) ([]model.Source, error) {
 	conn, err := s.db.Connx(ctx)
 	if err != nil {
@@ -88,5 +92,6 @@ type dbSource struct {
 	ID        int64     `db:"id"`
 	Name      string    `db:"name"`
 	FeedURL   string    `db:"feed_url"`
+	Priority  int       `db:"priority"`
 	CreatedAt time.Time `db:"created_at"`
 }

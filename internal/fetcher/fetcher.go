@@ -6,7 +6,7 @@ import (
 	"strings"
 	"sync"
 	"tg-bot-rss/internal/model"
-	"tg-bot-rss/internal/source"
+	src "tg-bot-rss/internal/source"
 	"time"
 
 	"go.tomakado.io/containers/set"
@@ -56,25 +56,22 @@ func (f *Fetcher) Fetch(ctx context.Context) error {
 
 	var wg sync.WaitGroup
 
-	for _, src := range sources {
+	for _, source := range sources {
 		wg.Add(1)
-
-		rssSource := source.NewRSSSourceFromModel(src)
 
 		go func(source Source) {
 			defer wg.Done()
-
 			items, err := source.Fetch(ctx)
 			if err != nil {
-				log.Println("[ERROR] Fetching items from source %s: %v", source.Name(), items)
+				log.Printf("[ERROR] Fetching items from source %s: %v", source.Name(), items)
 				return
 			}
 
 			if err := f.processItems(ctx, source, items); err != nil {
-				log.Println("[ERROR] Processing items from source %s: %v", source.Name(), items)
+				log.Printf("[ERROR] Processing items from source %s: %v", source.Name(), items)
 				return
 			}
-		}(rssSource)
+		}(src.NewRSSSourceFromModel(source))
 	}
 	wg.Wait()
 	return nil
@@ -87,7 +84,6 @@ func (f *Fetcher) processItems(ctx context.Context, source Source, items []model
 		if f.itemShouldBeSkipped(item) {
 			continue
 		}
-
 		if err := f.articles.Store(ctx, model.Article{
 			SourceID:    source.ID(),
 			Title:       item.Title,
