@@ -45,10 +45,11 @@ func main() {
 			config.Get().FetchInterval,
 			config.Get().FilterKeywords,
 		)
-		summarizer = summary.NewOpenAISummarizer(
-			config.Get().OpenAIKey,
-			config.Get().OpenAIModel,
-			config.Get().OpenAIPrompt,
+		summarizer = summary.NewYandexGPTSummarizer(
+			config.Get().YandexGPTKey,
+			config.Get().YandexGPTModel,
+			config.Get().YandexGPTPrompt,
+			config.Get().YandexGPTCatalogID,
 		)
 		notifier = notifier.New(
 			articleStorage,
