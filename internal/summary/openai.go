@@ -31,7 +31,7 @@ func NewYandexGPTSummarizer(apiKey, model, prompt, catalogID string) *YandexGPTA
 	}
 
 	log.Printf("yandexGPT summarizer is enabled: %v", apiKey != "")
-	fmt.Println(apiKey)
+
 	if apiKey != "" {
 		y.enabled = true
 	}
