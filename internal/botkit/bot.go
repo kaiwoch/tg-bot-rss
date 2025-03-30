@@ -80,12 +80,3 @@ func (b *Bot) handleUpdate(ctx context.Context, update tgbotapi.Update) {
 }
 
 type ViewFunc func(ctx context.Context, bot *tgbotapi.BotAPI, update tgbotapi.Update) error
-
-func ViewCmdStart() ViewFunc {
-	return func(ctx context.Context, bot *tgbotapi.BotAPI, update tgbotapi.Update) error {
-		if _, err := bot.Send(tgbotapi.NewMessage(update.FromChat().ID, "Hello world")); err != nil {
-			return err
-		}
-		return nil
-	}
-}

@@ -2,11 +2,12 @@ package storage
 
 import (
 	"context"
-	"tg-bot-rss/internal/model"
 	"time"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/samber/lo"
+
+	"tg-bot-rss/internal/model"
 )
 
 type SourcePostgresStorage struct {
@@ -43,6 +44,7 @@ func (s *SourcePostgresStorage) SourceByID(ctx context.Context, id int64) (*mode
 	if err := conn.GetContext(ctx, &source, `SELECT * FROM sources WHERE id = $1`, id); err != nil {
 		return nil, err
 	}
+
 	return (*model.Source)(&source), nil
 }
 
@@ -55,12 +57,11 @@ func (s *SourcePostgresStorage) Add(ctx context.Context, source model.Source) (i
 
 	var id int64
 
-	row := conn.QueryRowContext(
+	row := conn.QueryRowxContext(
 		ctx,
-		`INSERT INTO sources (name, feed_url, created_at) VALUEST ($1, $2, $3) RETURNING id`,
-		source.Name,
-		source.FeedURL,
-		source.CreatedAt,
+		`INSERT INTO sources (name, feed_url, priority)
+					VALUES ($1, $2, $3) RETURNING id;`,
+		source.Name, source.FeedURL, source.Priority,
 	)
 
 	if err := row.Err(); err != nil {
@@ -72,6 +73,18 @@ func (s *SourcePostgresStorage) Add(ctx context.Context, source model.Source) (i
 	}
 
 	return id, nil
+}
+
+func (s *SourcePostgresStorage) SetPriority(ctx context.Context, id int64, priority int) error {
+	conn, err := s.db.Connx(ctx)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	_, err = conn.ExecContext(ctx, `UPDATE sources SET priority = $1 WHERE id = $2`, priority, id)
+
+	return err
 }
 
 func (s *SourcePostgresStorage) Delete(ctx context.Context, id int64) error {

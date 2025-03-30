@@ -9,71 +9,76 @@ import (
 	"sync"
 	"time"
 
-	"github.com/sashabaranov/go-openai"
+	"github.com/sheeiavellie/go-yandexgpt"
 )
 
-type OpenAISummarizer struct {
-	client  *openai.Client
-	prompt  string
-	enabled bool
-	mu      sync.Mutex
+type YandexGPTAISummarizer struct {
+	client    *yandexgpt.YandexGPTClient
+	prompt    string
+	model     string
+	catalogID string
+	enabled   bool
+	mu        sync.Mutex
 }
 
-func NewOpenAISummarizer(apiKey string, prompt string) *OpenAISummarizer {
-	s := &OpenAISummarizer{
-		client: openai.NewClient(apiKey),
-		prompt: prompt,
+func NewYandexGPTSummarizer(apiKey, model, prompt, catalogID string) *YandexGPTAISummarizer {
+
+	y := &YandexGPTAISummarizer{
+		client:    yandexgpt.NewYandexGPTClientWithIAMToken(apiKey),
+		prompt:    prompt,
+		model:     model,
+		catalogID: catalogID,
 	}
 
+	log.Printf("yandexGPT summarizer is enabled: %v", apiKey != "")
+	fmt.Println(apiKey)
 	if apiKey != "" {
-		s.enabled = true
+		y.enabled = true
 	}
 
-	log.Printf("openai summarizer is enabled: %v", apiKey != "")
-	return s
-
+	return y
 }
 
-func (s *OpenAISummarizer) Summarize(ctx context.Context, text string) (string, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+func (y *YandexGPTAISummarizer) Summarize(text string) (string, error) {
+	y.mu.Lock()
+	defer y.mu.Unlock()
 
-	if !s.enabled {
-		return "", nil
+	if !y.enabled {
+		return "", fmt.Errorf("openai summarizer is disabled")
 	}
 
-	request := openai.ChatCompletionRequest{
-		Model: "gpt-3.5-turbo",
-		Messages: []openai.ChatCompletionMessage{
+	request := yandexgpt.YandexGPTRequest{
+		ModelURI: yandexgpt.MakeModelURI(y.catalogID, yandexgpt.YandexGPT4Model),
+		CompletionOptions: yandexgpt.YandexGPTCompletionOptions{
+			Stream:      false,
+			Temperature: 0.6,
+			MaxTokens:   2000,
+		},
+		Messages: []yandexgpt.YandexGPTMessage{
 			{
-				Role:    openai.ChatMessageRoleSystem,
-				Content: s.prompt,
+				Role: yandexgpt.YandexGPTMessageRoleSystem,
+				Text: y.prompt,
 			},
 			{
-				Role:    openai.ChatMessageRoleUser,
-				Content: text,
+				Role: yandexgpt.YandexGPTMessageRoleUser,
+				Text: text,
 			},
 		},
-		MaxTokens:   1024,
-		Temperature: 1,
-		TopP:        1,
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 	defer cancel()
 
-	resp, err := s.client.CreateChatCompletion(ctx, request)
+	resp, err := y.client.GetCompletion(ctx, request)
 	if err != nil {
 		return "", err
 	}
 
-	fmt.Println(resp)
-
-	if len(resp.Choices) == 0 {
+	if len(resp.Result.Alternatives) == 0 {
 		return "", errors.New("no choices in openai response")
 	}
 
-	rawSummary := strings.TrimSpace(resp.Choices[0].Message.Content)
+	rawSummary := strings.TrimSpace(resp.Result.Alternatives[0].Message.Text)
 	if strings.HasSuffix(rawSummary, ".") {
 		return rawSummary, nil
 	}

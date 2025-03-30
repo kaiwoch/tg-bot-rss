@@ -81,9 +81,10 @@ func (f *Fetcher) processItems(ctx context.Context, source Source, items []model
 	for _, item := range items {
 		item.Date = item.Date.UTC()
 
-		if f.itemShouldBeSkipped(item) {
+		if !f.itemShouldBeSkipped(item) {
 			continue
 		}
+
 		if err := f.articles.Store(ctx, model.Article{
 			SourceID:    source.ID(),
 			Title:       item.Title,

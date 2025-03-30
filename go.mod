@@ -6,6 +6,7 @@ require (
 	github.com/SlyMarbo/rss v1.0.5
 	github.com/cristalhq/aconfig v0.18.6
 	github.com/cristalhq/aconfig/aconfighcl v0.17.1
+	github.com/defer-panic/news-feed-bot v0.0.0-20231031224948-23b7d5e1c1ea
 	github.com/go-shiori/go-readability v0.0.0-20250217085726-9f5bf5ca7612
 	github.com/lib/pq v1.10.9
 	github.com/sashabaranov/go-openai v1.38.1
@@ -18,6 +19,7 @@ require (
 	github.com/gogs/chardet v0.0.0-20211120154057-b7413eaefb8f // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
+	github.com/sheeiavellie/go-yandexgpt v1.7.0 // indirect
 	golang.org/x/net v0.35.0 // indirect
 	golang.org/x/text v0.22.0 // indirect
 )
